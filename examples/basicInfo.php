@@ -12,7 +12,7 @@ try {
     //  7777      -> Server Port
     //  2         -> Timeout
     //  true      -> Check if server is online via 3rd party services.
-    $server = new sampBetterAPI('127.0.0.1', '7777', 2, true);
+    $server = new sampBetterAPI('127.0.0.1', '8888', 2, false);
 
     $info = array(
         'hostname'       => $server->info('hostname'),

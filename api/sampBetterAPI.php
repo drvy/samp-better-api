@@ -3,17 +3,17 @@
  *  A PHP API for SAMP servers. Will gather info provided by the server
  *  and make it accessable in a programmer friendly way. Uses the general
  *  API provided by SAMP. <https://wiki.sa-mp.com/wiki/Query_Mechanism>
- *  
+ *
  *  Its more friendly than Westie's QueryAPI since it provides better
  *  error mangament, more functions, on-demand connection and more.
- *  
+ *
  *  Latest version / Documentation / Issues and More on:
  *  <https://github.com/drvy/sampBetterAPI>
  *
  *  @package sampBetterAPI
- *  @version 0.1
+ *  @version 0.2
  *  @author Dragomir Yordanov <drvy@drvy.net>
- *  @copyright 2016; MIT Licence <https://github.com/drvy/sampBetterAPI/blob/master/LICENSE>
+ *  @copyright 2018; MIT Licence <https://github.com/drvy/sampBetterAPI/blob/master/LICENSE>
  */
 
  #namespace App\Includes; // You should declare your namespace :)
@@ -83,12 +83,13 @@ class sampBetterAPI {
      * @return     boolean    True if success, False otherwise.
      */
     protected function socket(){
+
         $this->socket = @fsockopen('udp://'.
-                                   $this->config['server'], 
-                                   $this->config['port'], 
-                                   $error, 
-                                   $error, 
-                                   $this->config['timeout']
+            $this->config['server'],
+            $this->config['port'],
+            $error,
+            $error,
+            $this->config['timeout']
         );
 
         if($error || !is_resource($this->socket)){
@@ -111,7 +112,7 @@ class sampBetterAPI {
 
 
     /**
-     * Closes a the connection to the server.
+     * Closes the connection to the server.
      * @return     boolean  Always return true. (Always close server)
      */
     protected function closeSocket(){
@@ -122,14 +123,17 @@ class sampBetterAPI {
 
 
     /**
-     * Opens a connection to the remote server after checking if its 
+     * Opens a connection to the remote server after checking if its
      * available for connections.
      *
      * @throws     Exception  In case services say its offline.
      * @return     boolean    True if success, False otherwise.
      */
     protected function openSocket(){
-        if(is_resource($this->socket)){ return true; }
+
+        if(is_resource($this->socket)){
+            return true;
+        }
 
         if(!$this->checkRemoteOnline()){
             throw new Exception('03 Server seems down from 3rd party services.');
@@ -149,7 +153,7 @@ class sampBetterAPI {
      * This may help reduce blocktime and lower resource usage on unstable
      * servers. Makes a doble check on two servers just in case the first
      * service is down.
-     * 
+     *
      * @return     boolean  True if server is online or remote check is disabled.
      *                      False if curl doesn't exist or server is offline.
      */
@@ -174,11 +178,11 @@ class sampBetterAPI {
         unset($s,$p);
 
         $settings = array(
+            CURLOPT_HEADER => false,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0 Safari/537.36',
-            CURLOPT_HEADER => false,
         );
 
         $ch = @curl_init();
@@ -206,7 +210,7 @@ class sampBetterAPI {
     /**
      * Checks if a method has declared that a chain should start.
      * Used in $this->player() and a feature TODO $this->rcon().
-     * 
+     *
      * @return     boolean   True/False Whenever a method has declared a chain.
      */
     protected function chained($c='default'){
@@ -216,7 +220,7 @@ class sampBetterAPI {
 
     /**
      * Unsets the chained property.
-     * 
+     *
      * @return     boolean    True. Always.
      */
     protected function unchain($c='default'){
@@ -228,7 +232,7 @@ class sampBetterAPI {
     /**
      * Sets the chain property. This will require all checking functions
      * to return false if they are not chained.
-     * 
+     *
      * @return     boolean    True. Always.
      */
     protected function chain($c='default'){
@@ -266,7 +270,7 @@ class sampBetterAPI {
         }
 
         $_payload = 'SAMP';
-        
+
         $ip = explode('.', $this->config['server']);
         foreach($ip as $seg){ $_payload .= chr($seg); }
 
@@ -290,14 +294,14 @@ class sampBetterAPI {
      * @return     string   Requested bytes.
      */
     protected function readPacket($bytes=2, $ord=false){
-        $result = @fread($this->socket, $bytes);
+        $result = fread($this->socket, $bytes);
         return ($ord ? ord($result) : $result);
     }
 
 
     /**
      * Lose Request. Requests X bytes from server that will be ignored.
-     * 
+     *
      * @param      integer  $bytes  The bytes to ignore.
      * @return     boolean  Always return true.
      */
@@ -323,15 +327,18 @@ class sampBetterAPI {
 
 
     /**
-     * Determines if the server is SAMP. Sends a ping/pong package to the 
+     * Determines if the server is SAMP. Sends a ping/pong package to the
      * server and expects the same response. Also resposible for determinating
      * the server's ping.
-     * 
+     *
      * @return     boolean  True if SAMP, False otherwise.
      */
     protected function isSamp(){
         $this->sendPacket('check');
         $a = microtime(true);
+
+        var_dump($this->readPacket(15, false));
+        die();
 
         $isSamp = (substr($this->readPacket(15, false),-5) === $this->checkm);
         $b = microtime(true);
@@ -392,7 +399,7 @@ class sampBetterAPI {
      * Gets the server players that are currently online. If $detail,
      * will also request players ping and id. This function does not
      * return the response.
-     * 
+     *
      * Notice: As of SAMP < 0.3.x if the server has more than 100 players
      * online at the request moment, this will return an empty array.
      * This is a bug of the SAMP server API.
@@ -501,7 +508,7 @@ class sampBetterAPI {
 
 
     /**
-     * Gets the player's score. Player must be previously set 
+     * Gets the player's score. Player must be previously set
      * via $this->player().
      *
      * @return     string  Player's score or false if player() not set.
@@ -515,7 +522,7 @@ class sampBetterAPI {
 
 
     /**
-     * Gets the player's id. Player must be previously set 
+     * Gets the player's id. Player must be previously set
      * via $this->player(). If the list is not the detailed one,
      * will request it.
      *
@@ -534,7 +541,7 @@ class sampBetterAPI {
 
 
     /**
-     * Gets the player's ping. Player must be previously set 
+     * Gets the player's ping. Player must be previously set
      * via $this->player(). If the list is not the detailed one,
      * will request it.
      *
@@ -553,7 +560,7 @@ class sampBetterAPI {
 
 
     /**
-     * Gets the player's nickname. Player must be previously set 
+     * Gets the player's nickname. Player must be previously set
      * via $this->player().
      *
      * @return     string  Player's nickname or false if player() not set.
@@ -569,7 +576,7 @@ class sampBetterAPI {
     /**
      * Forces a request on server information. Usefull if running in constant
      * CLI mode and you need to update some of the information.
-     * 
+     *
      * Allowed: basic, detailed, players, detailedPlayers and ping.
      *
      * @param      string  $request  The type of update
@@ -602,7 +609,7 @@ class sampBetterAPI {
      * General getter for information about server, and players list.
      * It detects what kind of information it needs to retrieve, and if it
      * doesn't exist, will request only the necessary one.
-     * 
+     *
      * $request may be: hostname, currentPlayers, maxPlayers, gamemode,
      * language, mapname, lagcomp, version, weather, weburl, worldtime,
      * players, detailedPlayers and ping.
